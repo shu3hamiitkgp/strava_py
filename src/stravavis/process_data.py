@@ -19,11 +19,7 @@ def process_file(fpath):
 # Ref: https://pypi.org/project/gpxpy/
 def process_gpx(gpxfile):
     with open(gpxfile, encoding="utf-8") as f:
-        try:
-            activity = gpxpy.parse(f)
-        except gpxpy.mod_gpx.GPXException as e:
-            print(f"\nSkipping {gpxfile}: {type(e).__name__}: {e}")
-            return None
+        activity = gpxpy.parse(f)
 
     lon = []
     lat = []
@@ -31,22 +27,28 @@ def process_gpx(gpxfile):
     time = []
     name = []
     dist = []
+    activity_type=[]
+    year=[]
 
     for track in activity.tracks:
         for segment in track.segments:
             x0 = activity.tracks[0].segments[0].points[0].longitude
             y0 = activity.tracks[0].segments[0].points[0].latitude
             d0 = 0
+            a=activity.tracks[0].type
             for point in segment.points:
                 x = point.longitude
                 y = point.latitude
                 z = point.elevation
                 t = point.time
+                yr = point.time.year
                 lon.append(x)
                 lat.append(y)
                 ele.append(z)
                 time.append(t)
                 name.append(gpxfile)
+                year.append(yr)
+                activity_type.append(a)
                 d = d0 + math.sqrt(math.pow(x - x0, 2) + math.pow(y - y0, 2))
                 dist.append(d)
                 x0 = x
@@ -54,8 +56,8 @@ def process_gpx(gpxfile):
                 d0 = d
 
     df = pd.DataFrame(
-        list(zip(lon, lat, ele, time, name, dist)),
-        columns=["lon", "lat", "ele", "time", "name", "dist"],
+        list(zip(lon, lat, ele, time, name, dist,activity_type,year)),
+        columns=["lon", "lat", "ele", "time", "name", "dist","activity_type","year"],
     )
 
     return df
